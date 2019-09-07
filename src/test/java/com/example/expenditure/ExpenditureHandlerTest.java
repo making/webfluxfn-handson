@@ -164,8 +164,7 @@ class ExpenditureHandlerTest {
             });
     }
 
-    // TODO 後で実装します
-    //@Test
+    @Test
     void post_400() {
         Map<String, Object> expenditure = new LinkedHashMap<String, Object>() {
 

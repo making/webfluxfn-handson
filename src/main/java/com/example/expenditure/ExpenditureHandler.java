@@ -1,5 +1,6 @@
 package com.example.expenditure;
 
+import com.example.error.ErrorResponseBuilder;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -7,8 +8,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
-import java.util.LinkedHashMap;
-
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 public class ExpenditureHandler {
@@ -34,23 +34,22 @@ public class ExpenditureHandler {
 
     Mono<ServerResponse> post(ServerRequest req) {
         return req.bodyToMono(Expenditure.class)
-            .flatMap(this.expenditureRepository::save)
-            .flatMap(created -> ServerResponse
-                .created(UriComponentsBuilder.fromUri(req.uri()).path("/{expenditureId}").build(created.getExpenditureId()))
-                .bodyValue(created));
+            .flatMap(expenditure -> expenditure.validate()
+                .bimap(v -> new ErrorResponseBuilder().withStatus(BAD_REQUEST).withDetails(v).build(), this.expenditureRepository::save)
+                .fold(error -> ServerResponse.badRequest().bodyValue(error),
+                    result -> result.flatMap(created -> ServerResponse
+                        .created(UriComponentsBuilder.fromUri(req.uri()).path("/{expenditureId}").build(created.getExpenditureId()))
+                        .bodyValue(created))));
     }
 
     Mono<ServerResponse> get(ServerRequest req) {
         return this.expenditureRepository.findById(Integer.valueOf(req.pathVariable("expenditureId")))
             .flatMap(expenditure -> ServerResponse.ok().bodyValue(expenditure))
-            .switchIfEmpty(Mono.defer(() -> ServerResponse.status(NOT_FOUND).bodyValue(new LinkedHashMap<String, Object>() {
-
-                {
-                    put("status", 404);
-                    put("error", "Not Found");
-                    put("message", "The given expenditure is not found.");
-                }
-            })));
+            .switchIfEmpty(Mono.defer(() -> ServerResponse.status(NOT_FOUND)
+                .bodyValue(new ErrorResponseBuilder()
+                    .withMessage("The given expenditure is not found.")
+                    .withStatus(NOT_FOUND)
+                    .build())));
     }
 
     Mono<ServerResponse> delete(ServerRequest req) {

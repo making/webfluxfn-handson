@@ -1,5 +1,9 @@
 package com.example.expenditure;
 
+import am.ik.yavi.builder.ValidatorBuilder;
+import am.ik.yavi.core.ConstraintViolations;
+import am.ik.yavi.core.Validator;
+import am.ik.yavi.fn.Either;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.time.LocalDate;
@@ -16,6 +20,17 @@ public class Expenditure {
     private final int quantity;
 
     private final LocalDate expenditureDate;
+
+    // 追加
+    private static Validator<Expenditure> validator = ValidatorBuilder.of(Expenditure.class)
+        .constraint(Expenditure::getExpenditureId, "expenditureId", c -> c.isNull())
+        // TODO
+        // "expenditureName"は空ではなく、文字数は255以下
+        // "unitPrice"は0より大きい
+        // "quantity"は0より大きい
+        // .constraint(...)
+        .constraintOnObject(Expenditure::getExpenditureDate, "expenditureDate", c -> c.notNull())
+        .build();
 
     Expenditure(Integer expenditureId, String expenditureName, int unitPrice, int quantity, LocalDate expenditureDate) {
         this.expenditureId = expenditureId;
@@ -49,6 +64,11 @@ public class Expenditure {
         return expenditureDate;
     }
 
+
+    // 追加
+    public Either<ConstraintViolations, Expenditure> validate() {
+        return validator.validateToEither(this);
+    }
 
     @Override
     public String toString() {
