@@ -7,8 +7,11 @@ import com.example.income.IncomeHandler;
 import com.example.income.R2dbcIncomeRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
+import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
+import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServer;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -85,6 +89,7 @@ public class App {
                     .defaultCodecs();
                 ObjectMapper objectMapper = Jackson2ObjectMapperBuilder.json()
                     .dateFormat(new StdDateFormat())
+                    .modules(new JavaTimeModule()) // <-- ここを追加
                     .build();
                 defaults.jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
                 defaults.jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
@@ -105,8 +110,16 @@ public class App {
 
     static ConnectionFactory connectionFactory() {
         // postgresql://username:password@hostname:5432/dbname
-        String databaseUrl = Optional.ofNullable(System.getenv("DATABASE_URL")).orElse("h2:file:///./target/demo?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
-        return ConnectionFactories.get("r2dbc:" + databaseUrl);
+        String databaseUrl = System.getenv("DATABASE_URL");
+        final URI uri = URI.create(databaseUrl);
+        final PostgresqlConnectionConfiguration configuration = PostgresqlConnectionConfiguration.builder()
+            .host(uri.getHost())
+            .port(uri.getPort())
+            .database(uri.getPath().substring(1))
+            .username(uri.getUserInfo().split(":", 2)[0])
+            .password(uri.getUserInfo().split(":", 2)[1])
+            .build();
+        return new PostgresqlConnectionFactory(configuration);
     }
 
     public static Mono<Void> initializeDatabase(String name, DatabaseClient databaseClient) {
