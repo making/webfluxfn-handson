@@ -3,6 +3,8 @@ package com.example;
 import com.example.error.ErrorResponseExceptionHandler;
 import com.example.expenditure.ExpenditureHandler;
 import com.example.expenditure.R2dbcExpenditureRepository;
+import com.example.income.IncomeHandler;
+import com.example.income.R2dbcIncomeRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import io.r2dbc.pool.ConnectionPool;
@@ -60,7 +62,8 @@ public class App {
         initializeDatabase(connectionFactory.getMetadata().getName(), databaseClient).subscribe();
 
         return staticRoutes()
-            .and(new ExpenditureHandler(new R2dbcExpenditureRepository(databaseClient, transactionalOperator)).routes());
+            .and(new ExpenditureHandler(new R2dbcExpenditureRepository(databaseClient, transactionalOperator)).routes())
+            .and(new IncomeHandler(new R2dbcIncomeRepository(databaseClient, transactionalOperator)).routes());
     }
 
     static RouterFunction<ServerResponse> staticRoutes() {
