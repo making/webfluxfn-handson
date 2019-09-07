@@ -1,11 +1,18 @@
 package com.example.expenditure;
 
-import com.example.App;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.server.RouterFunction;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -16,13 +23,32 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@WebFluxTest
+@Import(ExpenditureHandler.class)
 class ExpenditureHandlerTest {
+
+    @Configuration
+    static class Config {
+
+        @Bean
+        public RouterFunction<?> routes(ExpenditureHandler expenditureHandler) {
+            return expenditureHandler.routes();
+        }
+
+        @Bean
+        @Primary
+        public ExpenditureRepository expenditureRepository() {
+            return new InMemoryExpenditureRepository();
+        }
+    }
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     private WebTestClient testClient;
 
-    private InMemoryExpenditureRepository expenditureRepository = new InMemoryExpenditureRepository();
-
-    private ExpenditureHandler expenditureHandler = new ExpenditureHandler(this.expenditureRepository);
+    @Autowired
+    private InMemoryExpenditureRepository expenditureRepository;
 
     private List<Expenditure> fixtures = Arrays.asList(
         new ExpenditureBuilder()
@@ -42,8 +68,7 @@ class ExpenditureHandlerTest {
 
     @BeforeAll
     void before() {
-        this.testClient = WebTestClient.bindToRouterFunction(this.expenditureHandler.routes())
-            .handlerStrategies(App.handlerStrategies()) // 追加
+        this.testClient = WebTestClient.bindToApplicationContext(this.applicationContext)
             .build();
     }
 

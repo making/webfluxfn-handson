@@ -1,11 +1,18 @@
 package com.example.income;
 
-import com.example.App;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.server.RouterFunction;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -16,13 +23,33 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@WebFluxTest
+@Import(IncomeHandler.class)
 class IncomeHandlerTest {
+
+    @Configuration
+    static class Config {
+
+        @Bean
+        public RouterFunction<?> routes(IncomeHandler incomeHandler) {
+            return incomeHandler.routes();
+        }
+
+        @Bean
+        @Primary
+        public IncomeRepository incomeRepository() {
+            return new InMemoryIncomeRepository();
+        }
+    }
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     private WebTestClient testClient;
 
-    private InMemoryIncomeRepository incomeRepository = new InMemoryIncomeRepository();
+    @Autowired
+    private InMemoryIncomeRepository incomeRepository;
 
-    private IncomeHandler incomeHandler = new IncomeHandler(this.incomeRepository);
 
     private List<Income> fixtures = Arrays.asList(
         new IncomeBuilder()
@@ -40,8 +67,7 @@ class IncomeHandlerTest {
 
     @BeforeAll
     void before() {
-        this.testClient = WebTestClient.bindToRouterFunction(this.incomeHandler.routes())
-            .handlerStrategies(App.handlerStrategies()) // 追加
+        this.testClient = WebTestClient.bindToApplicationContext(this.applicationContext)
             .build();
     }
 

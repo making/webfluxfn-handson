@@ -1,12 +1,14 @@
 package com.example.income;
 
 import org.springframework.data.r2dbc.core.DatabaseClient;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.data.r2dbc.query.Criteria.where;
 
+@Repository
 public class R2dbcIncomeRepository implements IncomeRepository {
 
     private final DatabaseClient databaseClient;

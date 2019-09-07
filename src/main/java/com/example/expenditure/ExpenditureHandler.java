@@ -1,6 +1,7 @@
 package com.example.expenditure;
 
 import com.example.error.ErrorResponseBuilder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+@Component
 public class ExpenditureHandler {
 
     private final ExpenditureRepository expenditureRepository;

@@ -1,6 +1,6 @@
 package com.example.income;
 
-import com.example.App;
+import com.example.config.R2dbcConfig;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,7 +46,7 @@ class R2dbcIncomeRepositoryTest {
             .build();
         this.transactionalOperator = TransactionalOperator.create(new R2dbcTransactionManager(connectionFactory));
         this.incomeRepository = new R2dbcIncomeRepository(this.databaseClient, transactionalOperator);
-        App.initializeDatabase("H2", this.databaseClient).block();
+        R2dbcConfig.initializeDatabase("H2", this.databaseClient).block();
     }
 
     @BeforeEach
