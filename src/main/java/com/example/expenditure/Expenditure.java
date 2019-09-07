@@ -21,14 +21,11 @@ public class Expenditure {
 
     private final LocalDate expenditureDate;
 
-    // 追加
     private static Validator<Expenditure> validator = ValidatorBuilder.of(Expenditure.class)
         .constraint(Expenditure::getExpenditureId, "expenditureId", c -> c.isNull())
-        // TODO
-        // "expenditureName"は空ではなく、文字数は255以下
-        // "unitPrice"は0より大きい
-        // "quantity"は0より大きい
-        // .constraint(...)
+        .constraint(Expenditure::getExpenditureName, "expenditureName", c -> c.notEmpty().lessThanOrEqual(255))
+        .constraint(Expenditure::getUnitPrice, "unitPrice", c -> c.greaterThan(0))
+        .constraint(Expenditure::getQuantity, "quantity", c -> c.greaterThan(0))
         .constraintOnObject(Expenditure::getExpenditureDate, "expenditureDate", c -> c.notNull())
         .build();
 
@@ -65,7 +62,6 @@ public class Expenditure {
     }
 
 
-    // 追加
     public Either<ConstraintViolations, Expenditure> validate() {
         return validator.validateToEither(this);
     }
