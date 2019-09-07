@@ -1,6 +1,6 @@
 [
   {
-    "name": "xxxxxx.yyyyyy.zzzzzz.Message",
+    "name": "com.example.Message",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
