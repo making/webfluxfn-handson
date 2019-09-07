@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.error.ErrorResponseExceptionHandler;
 import com.example.expenditure.ExpenditureHandler;
 import com.example.expenditure.R2dbcExpenditureRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -85,6 +86,8 @@ public class App {
                 defaults.jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
                 defaults.jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
             })
+            // ↓追加
+            .exceptionHandler(new ErrorResponseExceptionHandler())
             .build();
     }
 
