@@ -27,9 +27,10 @@ public class R2dbcExpenditureRepository implements ExpenditureRepository {
 
     @Override
     public Mono<Expenditure> findById(Integer expenditureId) {
-        // TODO
-        // "expenditure_id"が引数のexpenditureIdに一致する1件のExpenditureを返す
-        return Mono.empty();
+        return this.databaseClient.select().from(Expenditure.class)
+            .matching(where("expenditure_id").is(expenditureId))
+            .as(Expenditure.class)
+            .one();
     }
 
     @Override
